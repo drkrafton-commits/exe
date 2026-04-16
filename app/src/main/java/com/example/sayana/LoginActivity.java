@@ -8,7 +8,6 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 import com.example.sayana.models.AuthResponse;
 import com.example.sayana.models.LoginRequest;
-import com.example.sayana.models.RegisterRequest;
 import com.example.sayana.network.AuthApi;
 import com.example.sayana.network.RetrofitClient;
 import com.google.android.material.button.MaterialButton;
@@ -17,11 +16,12 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
-public class MainActivity extends AppCompatActivity {
+public class LoginActivity extends AppCompatActivity {
 
     private TextInputEditText editEmail, editPassword;
     private MaterialButton btnNext;
     private TextView tvRegister;
+    private AuthApi api;   // <-- объявляем api
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,8 +33,25 @@ public class MainActivity extends AppCompatActivity {
         btnNext = findViewById(R.id.btnNext);
         tvRegister = findViewById(R.id.tvRegister);
 
+        // Инициализация api
+        api = RetrofitClient.getClient().create(AuthApi.class);
+
+        // Вход
         btnNext.setOnClickListener(v -> attemptLogin());
-        tvRegister.setOnClickListener(v -> attemptRegister());
+
+        // Регистрация → переход на экран создания профиля
+        tvRegister.setOnClickListener(v -> {
+            String email = editEmail.getText().toString().trim();
+            String password = editPassword.getText().toString().trim();
+            if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
+                Toast.makeText(LoginActivity.this, "Заполните email и пароль", Toast.LENGTH_SHORT).show();
+                return;
+            }
+            Intent intent = new Intent(LoginActivity.this, CreateProfileActivity.class);
+            intent.putExtra("email", email);
+            intent.putExtra("password", password);
+            startActivity(intent);
+        });
     }
 
     private void attemptLogin() {
@@ -44,47 +61,25 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show();
             return;
         }
+
         LoginRequest request = new LoginRequest(email, password);
-        AuthApi api = RetrofitClient.getClient().create(AuthApi.class);
         api.loginUser(request).enqueue(new Callback<AuthResponse>() {
             @Override
             public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
                 if (response.isSuccessful() && response.body() != null) {
-                    Toast.makeText(MainActivity.this, response.body().getMessage(), Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(MainActivity.this, BlankActivity.class));
+                    Toast.makeText(LoginActivity.this, "Вход выполнен", Toast.LENGTH_SHORT).show();
+                    Intent intent = new Intent(LoginActivity.this, DashboardActivity.class); // вместо ProfileActivity
+                    intent.putExtra("email", email);
+                    startActivity(intent);
                     finish();
                 } else {
-                    Toast.makeText(MainActivity.this, "Ошибка входа: " + response.message(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(LoginActivity.this, "Неверный email или пароль", Toast.LENGTH_SHORT).show();
                 }
             }
-            @Override
-            public void onFailure(Call<AuthResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT).show();
-            }
-        });
-    }
 
-    private void attemptRegister() {
-        String email = editEmail.getText().toString().trim();
-        String password = editPassword.getText().toString().trim();
-        if (TextUtils.isEmpty(email) || TextUtils.isEmpty(password)) {
-            Toast.makeText(this, "Заполните все поля", Toast.LENGTH_SHORT).show();
-            return;
-        }
-        RegisterRequest request = new RegisterRequest(email, password);
-        AuthApi api = RetrofitClient.getClient().create(AuthApi.class);
-        api.registerUser(request).enqueue(new Callback<AuthResponse>() {
-            @Override
-            public void onResponse(Call<AuthResponse> call, Response<AuthResponse> response) {
-                if (response.isSuccessful()) {
-                    Toast.makeText(MainActivity.this, "Регистрация успешна! Теперь войдите.", Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(MainActivity.this, "Ошибка регистрации", Toast.LENGTH_SHORT).show();
-                }
-            }
             @Override
             public void onFailure(Call<AuthResponse> call, Throwable t) {
-                Toast.makeText(MainActivity.this, "Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                Toast.makeText(LoginActivity.this, "Ошибка сети: " + t.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
     }

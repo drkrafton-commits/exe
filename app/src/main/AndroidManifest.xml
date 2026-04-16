@@ -13,23 +13,15 @@
         android:theme="@style/Theme.Sayana"
         android:usesCleartextTraffic="true">
 
-        <activity
-            android:name=".SplashActivity"
-            android:exported="true"
-            android:theme="@style/Theme.AppCompat.NoActionBar">
+        <activity android:name=".SplashActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-        <activity
-            android:name=".MainActivity"
-            android:exported="false" />
-
-        <activity
-            android:name=".BlankActivity"
-            android:exported="false" />
+        <activity android:name=".LoginActivity" />
+        <activity android:name=".CreateProfileActivity" />
+        <activity android:name=".DashboardActivity" />
 
     </application>
 
